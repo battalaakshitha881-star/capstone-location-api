@@ -26,6 +26,24 @@ async function main() {
       { name: 'Sinduri', code: '525005', subDistrictId: akkalkuwa.id },
     ]
   });
+const gujarat = await prisma.state.create({
+    data: { name: 'Gujarat', code: '24', countryId: india.id }
+  });
+
+  const surat = await prisma.district.create({
+    data: { name: 'Surat', code: '482', stateId: gujarat.id }
+  });
+
+  const choryasi = await prisma.subDistrict.create({
+    data: { name: 'Choryasi', code: '04521', districtId: surat.id }
+  });
+
+  await prisma.village.createMany({
+    data: [
+      { name: 'Kosad', code: '612001', subDistrictId: choryasi.id },
+      { name: 'Sarthana', code: '612002', subDistrictId: choryasi.id },
+    ]
+  });
 
   console.log('Seed data inserted successfully!');
 }
