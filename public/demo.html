@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Contact Form - Demo Client</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f7f9fc; padding: 40px; }
+    .card { background: white; max-width: 600px; margin: auto; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    h1 { color: #1E2761; margin-top: 0; }
+    .note { background: #EAF3FB; padding: 10px; border-radius: 4px; font-size: 13px; color: #5A6B87; margin-bottom: 20px; }
+    label { display: block; margin-top: 15px; font-weight: bold; color: #1E2761; font-size: 14px; }
+    input, textarea { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    input[readonly] { background: #f0f0f0; }
+    button { margin-top: 20px; background: #028090; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 15px; }
+    #suggestions { border: 1px solid #ccc; border-top: none; max-height: 180px; overflow-y: auto; }
+    #suggestions div { padding: 8px; cursor: pointer; font-size: 14px; }
+    #suggestions div:hover { background: #EAF3FB; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Contact Us</h1>
+    <div class="note">DEMO: Address fields auto-fill using the Location API's autocomplete endpoint.</div>
+
+    <label>Full Name</label>
+    <input type="text" id="name">
+
+    <label>Email Address</label>
+    <input type="email" id="email">
+
+    <label>Phone Number</label>
+    <input type="tel" id="phone">
+
+    <label>Village / Area (start typing)</label>
+    <input type="text" id="village" autocomplete="off">
+    <div id="suggestions"></div>
+
+    <label>Sub-District</label>
+    <input type="text" id="subDistrict" readonly>
+
+    <label>District</label>
+    <input type="text" id="district" readonly>
+
+    <label>State</label>
+    <input type="text" id="state" readonly>
+
+    <label>Country</label>
+    <input type="text" id="country" value="India" readonly>
+
+    <label>Message</label>
+    <textarea id="message" rows="4"></textarea>
+
+    <button onclick="submitForm()">Submit</button>
+  </div>
+
+  <script>
+    const API_KEY = 'ak_demo1234567890abcdef1234567890ab';
+    const villageInput = document.getElementById('village');
+    const suggestionsBox = document.getElementById('suggestions');
+
+    villageInput.addEventListener('input', async () => {
+      const q = villageInput.value;
+      suggestionsBox.innerHTML = '';
+      if (q.length < 2) return;
+
+      const res = await fetch(`/v1/search?q=${encodeURIComponent(q)}&limit=10`, {
+        headers: { 'X-API-Key': API_KEY }
+      });
+      const json = await res.json();
+      if (!json.success) return;
+
+      json.data.forEach(item => {
+        const div = document.createElement('div');
+        div.textContent = `${item.hierarchy.village} (${item.hierarchy.subDistrict}, ${item.hierarchy.district}, ${item.hierarchy.state})`;
+        div.onclick = () => {
+          villageInput.value = item.hierarchy.village;
+          document.getElementById('subDistrict').value = item.hierarchy.subDistrict;
+          document.getElementById('district').value = item.hierarchy.district;
+          document.getElementById('state').value = item.hierarchy.state;
+          document.getElementById('country').value = item.hierarchy.country;
+          suggestionsBox.innerHTML = '';
+        };
+        suggestionsBox.appendChild(div);
+      });
+    });
+
+    function submitForm() {
+      const data = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        fullAddress: `${villageInput.value}, ${document.getElementById('subDistrict').value}, ${document.getElementById('district').value}, ${document.getElementById('state').value}, ${document.getElementById('country').value}`,
+        message: document.getElementById('message').value
+      };
+      alert('Form submitted!\n\n' + JSON.stringify(data, null, 2));
+    }
+  </script>
+</body>
+</html>
